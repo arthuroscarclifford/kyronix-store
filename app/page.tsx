@@ -1,5 +1,7 @@
 "use client";
+
 import React, { useState } from "react";
+
 export default function KyronixStore() {
   const [activeTab, setActiveTab] = useState<"home" | "library" | "reader">("home");
   const [selectedBook, setSelectedBook] = useState<string | null>(null);
@@ -202,5 +204,3 @@ export default function KyronixStore() {
     </div>
   );
 }
-
-``
