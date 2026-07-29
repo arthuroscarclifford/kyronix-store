@@ -1,7 +1,5 @@
 "use client";
-
 import React, { useState } from "react";
-
 export default function KyronixStore() {
   const [activeTab, setActiveTab] = useState<"home" | "library" | "reader">("home");
   const [selectedBook, setSelectedBook] = useState<string | null>(null);
@@ -56,11 +54,11 @@ export default function KyronixStore() {
             <section className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-zinc-900 to-zinc-950 border border-zinc-800 p-8 md:p-12">
               <div className="max-w-xl space-y-4">
                 <span className="text-xs uppercase tracking-widest text-amber-500 font-bold bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-                  Featured Webtoon & Book
+                  Featured Graphic Novel & Book
                 </span>
                 <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">The Chronicles of Eldoria</h2>
                 <p className="text-zinc-400 text-sm md:text-base leading-relaxed">
-                  Immerse yourself in a hybrid experience blending rich novel chapters with high-contrast vertical panels. Track your reading progress, join discussions, and read offline.
+                  Immerse yourself in a hybrid experience blending rich novel chapters with high-contrast vertical scroll panels. Track your reading progress, join discussions, and read offline.
                 </p>
                 <div className="flex space-x-4 pt-2">
                   <button 
@@ -77,7 +75,7 @@ export default function KyronixStore() {
               </div>
             </section>
 
-            {/* Webtoon Comic Cards Grid */}
+            {/* Comic Cards Grid */}
             <section className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold tracking-tight">Trending Comics & Manga</h3>
@@ -161,11 +159,11 @@ export default function KyronixStore() {
               ← Back to Discovery
             </button>
             <div className="space-y-2">
-              <span className="text-xs text-amber-500 font-bold uppercase tracking-wider">Vertical Webtoon Reader</span>
+              <span className="text-xs text-amber-500 font-bold uppercase tracking-wider">Vertical Scroll Reader</span>
               <h2 className="text-3xl font-extrabold">{selectedBook || "Eldoria Chapter 1"}</h2>
             </div>
 
-            {/* Simulated Webtoon Vertical Panels */}
+            {/* Simulated Vertical Comic Panels */}
             <div className="space-y-4">
               <div className="w-full h-96 bg-zinc-900 rounded-xl border border-zinc-800 flex items-center justify-center text-zinc-600 font-medium">
                 [ Vertical Panel Image 1 ]
@@ -204,3 +202,5 @@ export default function KyronixStore() {
     </div>
   );
 }
+
+``
