@@ -1,10 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+
+type BookCard = {
+  title: string;
+  authors: string[];
+  coverId?: number;
+  subjects: string[];
+  year?: number;
+  openLibraryKey?: string;
+};
 
 export default function KyronixStore() {
   const [activeTab, setActiveTab] = useState<"home" | "library" | "reader">("home");
   const [selectedBook, setSelectedBook] = useState<string | null>(null);
+  const [catalogType, setCatalogType] = useState<"books" | "comics" | "manga">("books");
+  const [books, setBooks] = useState<BookCard[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [comments, setComments] = useState<string[]>([
     "Absolute masterpiece! The panel flow here is incredible.",
     "That cliffhanger at the end of the chapter gave me chills."
@@ -17,6 +30,33 @@ export default function KyronixStore() {
     setComments([...comments, newComment]);
     setNewComment("");
   };
+
+  useEffect(() => {
+    async function loadBooks() {
+      setIsLoading(true);
+      setFetchError(null);
+
+      const endpoint = catalogType === "books" ? "/api/books" : catalogType === "comics" ? "/api/comics" : "/api/comics/manga";
+      const queryValue = catalogType === "books" ? "graphic+novel" : catalogType === "comics" ? "comics" : "manga";
+
+      try {
+        const response = await fetch(`${endpoint}?query=${queryValue}&limit=8`);
+
+        if (!response.ok) {
+          throw new Error(`Fetch failed with status ${response.status}`);
+        }
+
+        const result = await response.json();
+        setBooks(Array.isArray(result.results) ? result.results : []);
+      } catch (error) {
+        setFetchError(error instanceof Error ? error.message : "Unable to load catalog.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadBooks();
+  }, [catalogType]);
 
   return (
     <div className="min-h-screen bg-[#0d0f12] text-zinc-100 font-sans antialiased selection:bg-amber-500 selection:text-black">
@@ -77,34 +117,92 @@ export default function KyronixStore() {
               </div>
             </section>
 
+            {/* Catalog Tabs */}
+            <section className="space-y-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h3 className="text-xl font-bold tracking-tight">Discovery Catalog</h3>
+                  <p className="text-sm text-zinc-500">Browse live books, comics, and manga without exposing client-side keys.</p>
+                </div>
+                <div className="flex items-center gap-3 rounded-full bg-zinc-900/70 border border-zinc-800 p-1">
+                  {(["books", "comics", "manga"] as const).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setCatalogType(type)}
+                      className={`relative flex flex-col items-center rounded-full px-4 py-2 text-sm font-semibold transition ${catalogType === type ? "bg-amber-500 text-black shadow-[0_0_0_1px_rgba(251,191,36,0.15)]" : "text-zinc-300 hover:text-amber-500"}`}>
+                      <span className="flex items-center gap-2">
+                        {type === "books" ? "Books" : type === "comics" ? "Comics" : "Manga"}
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] ${catalogType === type ? "bg-black/80 text-amber-300" : "bg-zinc-950 text-zinc-400"}`}>
+                          LIVE
+                        </span>
+                      </span>
+                      {catalogType === type ? (
+                        <span className="mt-2 h-0.5 w-10 rounded-full bg-amber-400" />
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+
             {/* Comic Cards Grid */}
             <section className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold tracking-tight">Trending Comics & Manga</h3>
+                <h3 className="text-xl font-bold tracking-tight">Trending {catalogType === "books" ? "Books" : catalogType === "comics" ? "Comics" : "Manga"}</h3>
                 <span className="text-xs text-zinc-500 hover:text-amber-500 cursor-pointer">View all</span>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {[
-                  { title: "Shadow Hunter", ep: "Ep. 24", genre: "Action / Dark Fantasy", img: "from-purple-900 to-zinc-900" },
-                  { title: "Lagos Cyberpunk", ep: "Ep. 12", genre: "Sci-Fi / Thriller", img: "from-blue-900 to-zinc-900" },
-                  { title: "Neon Blossom", ep: "Ep. 08", genre: "Slice of Life", img: "from-amber-900 to-zinc-900" },
-                  { title: "Bloodline Kings", ep: "Ep. 45", genre: "Epic Fantasy", img: "from-red-900 to-zinc-900" },
-                ].map((comic, idx) => (
-                  <div 
-                    key={idx} 
-                    onClick={() => { setSelectedBook(comic.title); setActiveTab("reader"); }}
-                    className="group cursor-pointer bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition">
-                    <div className={`h-48 bg-gradient-to-b ${comic.img} flex items-end p-3 relative`}>
-                      <span className="absolute top-3 right-3 text-[10px] font-bold bg-black/60 backdrop-blur-md text-amber-400 px-2.5 py-1 rounded-md border border-amber-500/20">
-                        {comic.ep}
-                      </span>
-                    </div>
-                    <div className="p-4 space-y-1">
-                      <h4 className="font-bold text-sm group-hover:text-amber-500 transition truncate">{comic.title}</h4>
-                      <p className="text-xs text-zinc-500">{comic.genre}</p>
-                    </div>
+                {isLoading ? (
+                  <div className="col-span-full rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 text-center text-zinc-500">
+                    Loading discovery feed...
                   </div>
-                ))}
+                ) : fetchError ? (
+                  <div className="col-span-full rounded-2xl border border-zinc-800 bg-rose-950/40 p-8 text-center text-rose-300">
+                    {fetchError}
+                  </div>
+                ) : books.length === 0 ? (
+                  <div className="col-span-full rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 text-center text-zinc-500">
+                    No books found in discovery feed.
+                  </div>
+                ) : (
+                  books.map((book, idx) => {
+                    const coverUrl = book.coverId
+                      ? `https://covers.openlibrary.org/b/id/${book.coverId}-L.jpg`
+                      : undefined;
+
+                    return (
+                      <div
+                        key={`${book.title}-${idx}`}
+                        onClick={() => { setSelectedBook(book.title); setActiveTab("reader"); }}
+                        className="group cursor-pointer overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50 transition hover:border-zinc-700">
+                        <div className="relative h-48 bg-zinc-950">
+                          {coverUrl ? (
+                            <img
+                              src={coverUrl}
+                              alt={book.title}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-zinc-500 text-sm">
+                              No cover available
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-1 p-4">
+                          <h4 className="truncate font-bold text-sm text-zinc-100 group-hover:text-amber-500 transition">
+                            {book.title}
+                          </h4>
+                          <p className="text-xs text-zinc-500">
+                            {book.authors.length > 0 ? book.authors.join(", ") : "Unknown author"}
+                          </p>
+                          <p className="text-[11px] uppercase tracking-[0.18em] text-amber-400">
+                            {book.subjects.slice(0, 2).join(" • ") || "Graphic novel"}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </section>
 
